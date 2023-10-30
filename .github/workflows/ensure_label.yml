@@ -1,0 +1,34 @@
+name: Ensure label
+
+on: 
+  workflow_call:
+  pull_request:
+
+jobs:
+  label_exists:
+    name: Label Must Exist
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for Labels
+        uses: actions/github-script@v6
+        with:
+          script: |
+            async function getPullRequest() {
+              // Get current pull request labels
+              const { data: { labels } } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.number,
+              });
+
+              // Log found label names
+              for (const label of labels) {
+                core.info(`Found label named '${label.name}' on pull request number ${context.payload.number}`);
+              };
+
+              // Fail workflow if no labels exist
+              labelsExist = (labels.length === 0) ? false : true;
+              if (!labelsExist) core.setFailed(`Please ensure that a label exists on pull request number ${context.payload.number}`);
+            }
+
+            getPullRequest();
