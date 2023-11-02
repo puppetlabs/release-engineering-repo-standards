@@ -1,0 +1,53 @@
+name: Dependabot auto-merge
+
+on:
+  workflow_call:
+    secrets:
+      BOT_GITHUB_TOKEN:
+        required: true
+        description: 'The token used to approve and enable auto-merge on a pull request.'
+    inputs:
+      # This allows cusomizing the conditions allowed to merge in caller workflows.
+      # It appears that there's no way to pass an expression to evaluate from an input into an
+      # if condition, so just create separate inputs & jobs for each desired condition.
+      merge-if-minor-or-patch-update:
+        type: boolean
+        required: false
+        description: 'The expression to evaluate in order for the dependabot to approve and enable auto-merge on the pull request.'
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  dependabot_metadata:
+    name: Check metadata
+    runs-on: ubuntu-latest
+    # if: ${{ github.actor == 'dependabot[bot]' }}
+    outputs:
+      update-type: ${{ steps.metadata.outputs.update-type }}
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v1
+        with:
+          github-token: "${{ secrets.BOT_GITHUB_TOKEN }}"
+
+  # Defined as a seperate job so that it was clear to end users what was run vs skipped
+  dependabot_merge_if_minor_patch_update:
+    name: Merge pull request
+    runs-on: ubuntu-latest
+    needs: dependabot_metadata
+    if: ${{ inputs.merge-if-minor-or-patch-update == true && (needs.dependabot_metadata.outputs.update-type == 'version-update:semver-minor' || needs.dependabot_metadata.outputs.update-type == 'version-update:semver-patch') }}
+    steps:
+      - name: Approve pull request
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.BOT_GITHUB_TOKEN}}
+      - name: Auto-merge pull request
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.BOT_GITHUB_TOKEN}}
