@@ -4,6 +4,11 @@ Standards and workflows for release engineering repositories
 
 - [Release Engineering Repo Standards](#release-engineering-repo-standards)
   - [Workflows](#workflows)
+    - [Auto Release Prep](#auto-release-prep)
+      - [Auto Release Prep Example](#auto-release-prep-example)
+      - [Auto Release Prep Secrets](#auto-release-prep-secrets)
+      - [Auto Release Prep Inputs](#auto-release-prep-inputs)
+      - [Auto Release Prep Outputs](#auto-release-prep-outputs)
     - [Dependabot auto-merge](#dependabot-auto-merge)
       - [Dependabot auto-merge Example](#dependabot-auto-merge-example)
       - [Dependabot auto-merge Secrets](#dependabot-auto-merge-secrets)
@@ -25,6 +30,48 @@ For more information about reusable workflows see [Reusing workflows](https://do
 **NOTE:** Please ensure that any repositories using these workflows reference them by a major version tag, as opposed to the default branch. Dependabot is able to detect updated tags for reusable workflows. This prevents breaking changes in the called workflows from breaking all caller workflows until the needed changes have been addressed.
 
 Many of our tools follow [Semantic Versioning](https://semver.org/), which means that applying one or more appropriate labels to pull requests is crucial both for determining the next release version of a tool and automatically generating an accurate changelog and release notes using [github-changelog-generator](https://github.com/github-changelog-generator/github-changelog-generator).
+
+### Auto Release Prep
+
+The [Auto Release Prep](.github/workflows/auto_release_prep.yml) workflow finds pull requests that have been merged since the last release and determines the appropriate next version bump based on those pull request labels. Next, it updates the semantic version in the file provided by `version-file-path`, commits and pushes to a new branch, then opens a pull request with the maintenance label.
+
+Pre-requisites:
+
+  1. The caller workflow must have an Actions secret called `BOT_GITHUB_TOKEN` with the value being a GitHub token with `repo` permission, and the token be be SSO authorized for the puppetlabs GitHub organization.
+  2. The caller repository should contain a `release-prep.sh` script that performs the appropriate preparation steps locally (For example, updating `Gemfile.lock`, or `package-lock.json`, etc. and `CHANGELOG.md`).
+  3. The caller repository should label pull requests appropriately in order to determine the appropriate next version bump.
+
+#### Auto Release Prep Example
+
+```yaml
+name: Automated release prep
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release_prep:
+    uses: puppetlabs/release-engineering-repo-standards/.github/workflows/auto_release_prep.yml@v1
+    secrets: inherit
+    with:
+      version-file-path: lib/always_be_scheduling/version.rb
+```
+
+#### Auto Release Prep Secrets
+
+| Secret name | Type | Description | Required |
+|------------|-------------|----------|---------------|
+| BOT_GITHUB_TOKEN | string | The token used to git push and open a pull request. | true |
+
+#### Auto Release Prep Inputs
+
+| Input name | Type | Description | Required | Default value |
+|------------|------|-------------|----------|---------------|
+| version-file-path | string | The path to a file containing a semantic version to update. | true | None |
+
+#### Auto Release Prep Outputs
+
+None
 
 ### Dependabot auto-merge
 
