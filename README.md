@@ -28,7 +28,7 @@ Many of our tools follow [Semantic Versioning](https://semver.org/), which means
 
 ### Dependabot auto-merge
 
-The [Dependabot auto-merge](.github/workflows/ensure_label.yml) workflow contains jobs used to gather the [metadata](https://github.com/dependabot/fetch-metadata/tree/main) of a pull request opened by Dependabot, then based on a condition, the pull request is approved and auto-merge enabled, meaning that as soon as all required status checks pass, then the pull request will automatically be merged.
+The [Dependabot auto-merge](.github/workflows/ensure_label.yml) workflow contains jobs used to gather the [metadata](https://github.com/dependabot/fetch-metadata/tree/main) of a pull request opened by Dependabot, then based on a condition, the pull request is approved and auto-merge enabled, meaning that as soon as all required status checks pass, then the pull request will automatically be merged. The workflow will also label "patch" dependency bumps with the "bug" label, and "minor" dependency bumps with the "enhancement" label.
 
 Pre-requisites:
 
@@ -54,15 +54,15 @@ jobs:
 
 #### Dependabot auto-merge Secrets
 
-| Secret name | Description | Required | Default value |
+| Secret name | Type | Description | Required |
 |------------|-------------|----------|---------------|
-| BOT_GITHUB_TOKEN | string | The token used to approve and enable auto-merge on a pull request. | true | `templates/builders` |
+| BOT_GITHUB_TOKEN | string | The token used to approve and enable auto-merge on a pull request. | true |
 
 #### Dependabot auto-merge Inputs
 
 | Input name | Type | Description | Required | Default value |
 |------------|------|-------------|----------|---------------|
-| merge-if-minor-or-patch-update | boolean | Approve and enable auto-merge on the pull request if the dependency update is a minor or patch version bump. | false | false |
+| merge-if-minor-or-patch-update | boolean | Approve and enable auto-merge on the pull request if the dependency update is a minor or patch version bump. | false | true |
 
 #### Dependabot auto-merge Outputs
 

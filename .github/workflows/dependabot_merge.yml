@@ -13,8 +13,8 @@ on:
       merge-if-minor-or-patch-update:
         type: boolean
         required: false
-        description: 'The expression to evaluate in order for the dependabot to approve and enable auto-merge on the pull request.'
-        default: false
+        description: 'Approve and enable auto-merge on the pull request if the dependency update is a minor or patch version bump.'
+        default: true
 
 permissions:
   contents: write
@@ -24,7 +24,7 @@ jobs:
   dependabot_metadata:
     name: Check metadata
     runs-on: ubuntu-latest
-    # if: ${{ github.actor == 'dependabot[bot]' }}
+    if: ${{ github.actor == 'dependabot[bot]' }}
     outputs:
       update-type: ${{ steps.metadata.outputs.update-type }}
     steps:
@@ -33,6 +33,20 @@ jobs:
         uses: dependabot/fetch-metadata@v1
         with:
           github-token: "${{ secrets.BOT_GITHUB_TOKEN }}"
+
+      - name: Label pull request (enhancement)
+        if: steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr edit --add-label "enhancement" "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.BOT_GITHUB_TOKEN}}
+
+      - name: Label pull request (bug)
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        run: gh pr edit --add-label "bug" "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.BOT_GITHUB_TOKEN}}
 
   # Defined as a seperate job so that it was clear to end users what was run vs skipped
   dependabot_merge_if_minor_patch_update:
