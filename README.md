@@ -3,7 +3,9 @@
 Standards and workflows for release engineering repositories
 
 - [Release Engineering Repo Standards](#release-engineering-repo-standards)
-  - [Workflows](#workflows)
+  - [Control Workflows](#control-workflows)
+    - [Schedule Release Prep](#schedule-release-prep)
+  - [Reusable Workflows](#reusable-workflows)
     - [Auto Release Prep](#auto-release-prep)
       - [Auto Release Prep Example](#auto-release-prep-example)
       - [Auto Release Prep Secrets](#auto-release-prep-secrets)
@@ -21,7 +23,21 @@ Standards and workflows for release engineering repositories
       - [Ensure label Outputs](#ensure-label-outputs)
   - [Contributing](#contributing)
 
-## Workflows
+## Control Workflows
+
+The sections below list workflows controlled from this repository.
+
+### Schedule Release Prep
+
+The [Schedule Release Prep](.github/workflows/schedule_release_prep.yml) workflow runs every Thursday, but uses the current week number modulo 2 in order to determine if it is an odd or even week. If it is an even week (In other words bi-weekly), then for the list of repositories kickoff the Auto Release Prep workflow. In order to not create a "storm" of release prep pull requests all being open at once, it sleeps for a random interval between 1 and 5 minutes between each repository. A `self-hosted` GitHub runner is used due to the random sleep interval, since GitHub hosted runners [bill based on minutes](https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions#about-billing-for-github-actions).
+
+Pre-requisites:
+
+  1. The called workflow must have an Actions secret called `BOT_GITHUB_TOKEN` with the value being a GitHub token with `repo` permission, and the token be be SSO authorized for the puppetlabs GitHub organization.
+  2. The called repository should contain a `release-prep.sh` script that performs the appropriate preparation steps locally (For example, updating `Gemfile.lock`, or `package-lock.json`, etc. and `CHANGELOG.md`).
+  3. The called repository should label pull requests appropriately in order to determine the appropriate next version bump.
+
+## Reusable Workflows
 
 The sections below list each reusable workflow with usage, inputs, outpus, etc..
 

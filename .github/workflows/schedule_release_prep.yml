@@ -1,0 +1,42 @@
+name: Schedule Release Prep
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 13 * * 4' # UTC
+
+jobs:
+  schedule_releases:
+    name: Schedule Releases
+    # self-hosted because we use random sleep and GitHub hosted runners are billed based on usage minutes.
+    runs-on: self-hosted
+    steps:
+      - name: Get Week Number Modulo
+        id: gwnm
+        run: |
+          weekModulo=$(expr $(date "+%V") % 2)
+          if [[ $weekModulo == 0 ]]; then
+            echo "The current week number $(date "+%V") is an even week"
+            echo "even-week=true" >> $GITHUB_OUTPUT
+          elif [[ $weekModulo == 1 ]]; then
+            echo "The current week number $(date "+%V") is an odd week"
+            echo "odd-week=true" >> $GITHUB_OUTPUT
+          else
+            echo "Something went wrong determining the even/odd week!"
+            exit 1
+          fi
+      - name: Kickoff release prep
+        if: ${{ steps.gwnm.outputs.even-week == 'true' }}
+        run: |
+          repoReleases=(
+            always-be-scheduling
+          )
+          for repo in "${repoReleases[@]}"; do
+            # Sleep randomly between 1 minute and 5 minutes to stagger releases
+            randomSleep=$((60 + $RANDOM % 240))
+            echo "Sleeping for $randomSleep seconds between release kickoff"
+            sleep $randomSleep
+            gh workflow run release_prep.yml --repo puppetlabs/$repo
+          done
+        env:
+          GH_TOKEN: ${{secrets.BOT_GITHUB_TOKEN}}
