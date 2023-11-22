@@ -4,6 +4,7 @@ Standards and workflows for release engineering repositories
 
 - [Release Engineering Repo Standards](#release-engineering-repo-standards)
   - [Control Workflows](#control-workflows)
+    - [Release](#release)
     - [Schedule Release Prep](#schedule-release-prep)
   - [Reusable Workflows](#reusable-workflows)
     - [Auto Release Prep](#auto-release-prep)
@@ -26,6 +27,16 @@ Standards and workflows for release engineering repositories
 ## Control Workflows
 
 The sections below list workflows controlled from this repository.
+
+### Release
+
+The [Release](.github/workflows/release.yml) workflow creates and updates tags and for the reusable workflows themselves, because caller repositories should be referencing these actions via a major version tag according to [GitHub Actions best practices](https://docs.github.com/en/actions/creating-actions/about-custom-actions#good-practices-for-release-management).
+
+If there are backwards incompatible changes to any workflow, then it's important to perform a major version bump, so that any caller workflows can be dealt with appropriately.
+
+The workflow will publish a new release tagging the latest commit, and move the major version tag (For example `v1`), to the latest commit as well.
+
+To perform a manual out of band release, bump the version in `info.json` appropriately based on merged pull requests since the last release and run `./release-prep.sh` to update `CHANGELOG.md`.
 
 ### Schedule Release Prep
 
