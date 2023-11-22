@@ -1,0 +1,141 @@
+name: Auto Release Prep
+
+on:
+  workflow_call:
+    secrets:
+      BOT_GITHUB_TOKEN:
+        required: true
+        description: 'The token used to git push and open a pull request.'
+    inputs:
+      version-file-path:
+        type: string
+        required: true
+        description: 'The path to a file containing a semantic version to update.'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  get_next_version:
+    name: Get Next Version
+    runs-on: ubuntu-latest
+    outputs:
+        next-version: ${{ steps.nv.outputs.result }}
+    steps:
+      - name: Install semver
+        run: npm install semver
+
+      - name: Get Next Version
+        uses: actions/github-script@v7
+        id: nv
+        with:
+          script: |
+            const semver = require('semver')
+
+            async function releasePrep() {
+              const { data: response } = await github.rest.repos.getLatestRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              })
+
+              const { data: pulls } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'closed',
+                per_page: 100,
+              });
+            
+              const { data: latestRelease } = await github.rest.repos.getLatestRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              });
+
+              core.info(`Found latest release ${latestRelease.name}`)
+
+            
+              let bugLabelCount = 0
+              let featureLabelCount = 0
+              let breakingLabelCount = 0
+            
+              for (const pull in pulls) {
+                core.debug(`Working on pull ${pulls[pull].url}`)
+            
+                const pullMergeDate = new Date(pulls[pull].merged_at)
+                const latestReleaseDate = new Date(latestRelease.created_at)
+            
+                if (pullMergeDate > latestReleaseDate) {
+                  core.info(`pull ${pulls[pull].url} was merged on ${pullMergeDate} after release ${latestRelease.name} on ${latestReleaseDate}`)
+            
+                  for (const label in pulls[pull].labels) {
+                    core.debug(`Found label ${pulls[pull].labels[label].name} for pull ${pulls[pull].url}`)
+                    if (pulls[pull].labels[label].name === 'bug') {
+                      bugLabelCount++
+                    } else if (pulls[pull].labels[label].name === 'enhancement') {
+                      featureLabelCount++
+                    } else if (pulls[pull].labels[label].name === 'backwards-incompatible') {
+                      breakingLabelCount++
+                    } else {
+                      core.debug(`${pulls[pull].labels[label].name} for pull ${pulls[pull].url} not used to determine version bump`)
+                    }
+                  }
+                }
+              }
+            
+              core.debug(`Total number of pulls with bug label found: ${bugLabelCount}`)
+              core.debug(`Total number of pulls with enhancement labels found: ${featureLabelCount}`)
+              core.debug(`Total number of pulls with backwards-incompatible labels found: ${breakingLabelCount}`)
+            
+              let nextVersion
+            
+              if (breakingLabelCount > 0) {
+                nextVersion = semver.inc(latestRelease.name, 'major')
+              } else if (featureLabelCount > 0) {
+                nextVersion = semver.inc(latestRelease.name, 'minor')
+              } else if (bugLabelCount > 0) {
+                nextVersion = semver.inc(latestRelease.name, 'patch')
+              } else {
+                core.info(`Skipping release because no 'bug', 'enhancement', or 'backwards-incompatible' labels were found in merged pulls since release ${latestRelease.name}`)
+                return nextVersion
+              }
+            
+              core.info(`The next version is ${nextVersion} based on labels on pull requests since the last release ${latestRelease.name}`)
+              return nextVersion
+            }
+      
+            return releasePrep()
+          result-encoding: string
+
+  create_release_prep_pull:
+    name: Create Release Prep PR
+    runs-on: ubuntu-latest
+    needs: get_next_version
+    if: ${{ needs.get_next_version.outputs.next-version != 'undefined' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Git
+        run: |
+          git config user.name "$(gh api /users/${GITHUB_ACTOR} | jq .name -r)"
+          git config user.email "${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com"
+          git switch -c ${{ needs.get_next_version.outputs.next-version }}-release-prep
+        env:
+          GITHUB_TOKEN: ${{secrets.BOT_GITHUB_TOKEN}}
+
+      - name: Update version in ${{ inputs.version-file-path }} and prep release
+        run: |
+          sed -i 's/\([[:digit:]]\.\)*[[:digit:]]/${{ needs.get_next_version.outputs.next-version }}/g' ${{ inputs.version-file-path }}
+          ./release-prep.sh
+        env:
+          CHANGELOG_GITHUB_TOKEN: ${{secrets.BOT_GITHUB_TOKEN}}
+
+      - name: Push and create pull request
+        run: |
+          git add .
+          git commit -m "${{ needs.get_next_version.outputs.next-version }} release prep"
+          git push -u origin ${{ needs.get_next_version.outputs.next-version }}-release-prep
+          gh pr create --title "${{ needs.get_next_version.outputs.next-version }} release prep" --body "Automated release prep for ${{ needs.get_next_version.outputs.next-version }} by ${GITHUB_ACTOR}" -l maintenance
+        env:
+          GITHUB_TOKEN: ${{secrets.BOT_GITHUB_TOKEN}}
