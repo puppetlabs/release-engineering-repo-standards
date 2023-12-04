@@ -24,7 +24,7 @@ jobs:
   dependabot_metadata:
     name: Check metadata
     runs-on: ubuntu-latest
-    if: ${{ github.actor == 'dependabot[bot]' }}
+    # if: ${{ github.actor == 'dependabot[bot]' }}
     outputs:
       update-type: ${{ steps.metadata.outputs.update-type }}
     steps:
