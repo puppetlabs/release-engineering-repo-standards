@@ -84,6 +84,21 @@ jobs:
       version-file-path: lib/always_be_scheduling/version.rb
 ```
 
+```yaml
+name: Automated release prep
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release_prep:
+    uses: puppetlabs/release-engineering-repo-standards/.github/workflows/auto_release_prep.yml@v1
+    secrets: inherit
+    with:
+      project-type: npm
+      version-file-path: package.json
+```
+
 #### Auto Release Prep Secrets
 
 | Secret name | Type | Description | Required |
@@ -94,6 +109,7 @@ jobs:
 
 | Input name | Type | Description | Required | Default value |
 |------------|------|-------------|----------|---------------|
+| project-type | string | The project type used to determine how to perform a version bump. One of npm or ruby. | true | ruby |
 | version-file-path | string | The path to a file containing a semantic version to update. | true | None |
 
 #### Auto Release Prep Outputs
