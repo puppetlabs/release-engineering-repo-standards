@@ -7,6 +7,11 @@ on:
         required: true
         description: 'The token used to git push and open a pull request.'
     inputs:
+      project-type:
+        type: string
+        required: true
+        description: 'The project type used to determine how to perform a version bump. One of npm or ruby.'
+        default: ruby
       version-file-path:
         type: string
         required: true
@@ -124,10 +129,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{secrets.BOT_GITHUB_TOKEN}}
 
-      - name: Update version in ${{ inputs.version-file-path }} and prep release
+      - name: Update version in ${{ inputs.version-file-path }} and prep release (ruby)
+        if: ${{ inputs.project-type == 'ruby' }}
         run: |
           sed -i 's/\([[:digit:]]\.\)*[[:digit:]]/${{ needs.get_next_version.outputs.next-version }}/g' ${{ inputs.version-file-path }}
-          ./release-prep.sh
+          ./release-prep.sh || ./release-prep
+        env:
+          CHANGELOG_GITHUB_TOKEN: ${{secrets.BOT_GITHUB_TOKEN}}
+
+      - name: Update version in ${{ inputs.version-file-path }} and prep release (npm)
+        if: ${{ inputs.project-type == 'npm' }}
+        run: |
+          cat <<< $(jq --arg version "${{ needs.get_next_version.outputs.next-version }}" '.version = $version' ${{ inputs.version-file-path }}) > ${{ inputs.version-file-path }}
+          ./release-prep.sh || ./release-prep
         env:
           CHANGELOG_GITHUB_TOKEN: ${{secrets.BOT_GITHUB_TOKEN}}
 

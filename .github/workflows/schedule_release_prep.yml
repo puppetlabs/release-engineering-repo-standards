@@ -36,7 +36,7 @@ jobs:
             randomSleep=$((60 + $RANDOM % 240))
             echo "Sleeping for $randomSleep seconds between release kickoff"
             sleep $randomSleep
-            gh workflow run release_prep.yml --repo puppetlabs/$repo
+            gh workflow run auto_release_prep.yml --repo puppetlabs/$repo
           done
         env:
           GH_TOKEN: ${{secrets.BOT_GITHUB_TOKEN}}
