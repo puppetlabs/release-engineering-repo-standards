@@ -1,8 +1,8 @@
 # Changelog
 
-## [v](https://github.com/puppetlabs/release-engineering-repo-standards/tree/v) (2023-12-07)
+## [v1.1.0](https://github.com/puppetlabs/release-engineering-repo-standards/tree/v1.1.0) (2023-12-07)
 
-[Full Changelog](https://github.com/puppetlabs/release-engineering-repo-standards/compare/v1.0.0...v)
+[Full Changelog](https://github.com/puppetlabs/release-engineering-repo-standards/compare/v1.0.0...v1.1.0)
 
 **Implemented enhancements:**
 
