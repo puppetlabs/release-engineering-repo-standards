@@ -1,5 +1,13 @@
 # Changelog
 
+## [v](https://github.com/puppetlabs/release-engineering-repo-standards/tree/v) (2023-12-07)
+
+[Full Changelog](https://github.com/puppetlabs/release-engineering-repo-standards/compare/v1.0.0...v)
+
+**Implemented enhancements:**
+
+- Add project type param to release prep [\#4](https://github.com/puppetlabs/release-engineering-repo-standards/pull/4) ([yachub](https://github.com/yachub))
+
 ## [v1.0.0](https://github.com/puppetlabs/release-engineering-repo-standards/tree/v1.0.0) (2023-11-22)
 
 [Full Changelog](https://github.com/puppetlabs/release-engineering-repo-standards/compare/45ce159270226a01a422ecabc6fd4bf3f31813b6...v1.0.0)

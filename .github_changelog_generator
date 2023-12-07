@@ -1,3 +1,4 @@
 project=release-engineering-repo-standards
 user=puppetlabs
 exclude_labels=maintenance
+exclude_tags_regex=^v\d$
