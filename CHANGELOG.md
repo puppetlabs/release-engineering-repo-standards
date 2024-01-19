@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.1.1](https://github.com/puppetlabs/release-engineering-repo-standards/tree/v1.1.1) (2024-01-19)
+
+[Full Changelog](https://github.com/puppetlabs/release-engineering-repo-standards/compare/v1.1.0...v1.1.1)
+
+**Fixed bugs:**
+
+- Fix auto\_release\_prep workflow [\#7](https://github.com/puppetlabs/release-engineering-repo-standards/pull/7) ([yachub](https://github.com/yachub))
+
 ## [v1.1.0](https://github.com/puppetlabs/release-engineering-repo-standards/tree/v1.1.0) (2023-12-07)
 
 [Full Changelog](https://github.com/puppetlabs/release-engineering-repo-standards/compare/v1.0.0...v1.1.0)
