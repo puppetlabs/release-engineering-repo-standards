@@ -81,6 +81,7 @@ jobs:
     uses: puppetlabs/release-engineering-repo-standards/.github/workflows/auto_release_prep.yml@v1
     secrets: inherit
     with:
+      project-type: ruby
       version-file-path: lib/always_be_scheduling/version.rb
 ```
 
