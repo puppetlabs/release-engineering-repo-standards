@@ -133,7 +133,14 @@ jobs:
         if: ${{ inputs.project-type == 'ruby' }}
         run: |
           sed -i 's/\([[:digit:]]\.\)*[[:digit:]]/${{ needs.get_next_version.outputs.next-version }}/g' ${{ inputs.version-file-path }}
-          ./release-prep.sh || ./release-prep
+          if [ -f release-prep.sh ]; then
+            ./release-prep.sh
+          elif [ -f release-prep ]; then
+            ./release-prep
+          else
+            echo "A release prep script by either the name of 'release-prep.sh' or 'release-prep' is missing. Please add one before using this workflow."
+            exit 1
+          fi
         env:
           CHANGELOG_GITHUB_TOKEN: ${{secrets.BOT_GITHUB_TOKEN}}
 
@@ -141,7 +148,14 @@ jobs:
         if: ${{ inputs.project-type == 'npm' }}
         run: |
           cat <<< $(jq --arg version "${{ needs.get_next_version.outputs.next-version }}" '.version = $version' ${{ inputs.version-file-path }}) > ${{ inputs.version-file-path }}
-          ./release-prep.sh || ./release-prep
+          if [ -f release-prep.sh ]; then
+            ./release-prep.sh
+          elif [ -f release-prep ]; then
+            ./release-prep
+          else
+            echo "A release prep script by either the name of 'release-prep.sh' or 'release-prep' is missing. Please add one before using this workflow."
+            exit 1
+          fi
         env:
           CHANGELOG_GITHUB_TOKEN: ${{secrets.BOT_GITHUB_TOKEN}}
 
