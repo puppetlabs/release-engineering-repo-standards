@@ -62,11 +62,22 @@ Many of our tools follow [Semantic Versioning](https://semver.org/), which means
 
 The [Auto Release Prep](.github/workflows/auto_release_prep.yml) workflow finds pull requests that have been merged since the last release and determines the appropriate next version bump based on those pull request labels. Next, it updates the semantic version in the file provided by `version-file-path`, commits and pushes to a new branch, then opens a pull request with the maintenance label.
 
+*Note:* The Auto Release Prep workflow assumes that your project uses GitHub Releases for its releases, not just tags. This workflow will not be able to determine the next version to use if there are no previous GitHub Releases, or the GitHub Releases are not up-to-date.
+
 Pre-requisites:
 
-  1. The caller workflow must have an Actions secret called `BOT_GITHUB_TOKEN` with the value being a GitHub token with `repo` permission, and the token be be SSO authorized for the puppetlabs GitHub organization.
-  2. The caller repository should contain a `release-prep.sh` script that performs the appropriate preparation steps locally (For example, updating `Gemfile.lock`, or `package-lock.json`, etc. and `CHANGELOG.md`).
-  3. The caller repository should label pull requests appropriately in order to determine the appropriate next version bump.
+  1. The caller repository's default branch must be `main`.
+  2. The caller workflow must have an Actions secret called `BOT_GITHUB_TOKEN` with the value being a GitHub token with `repo` permission, and the token be be SSO authorized for the puppetlabs GitHub organization.
+  3. The caller repository should contain a `release-prep.sh` script that performs the appropriate preparation steps locally (For example, updating `Gemfile.lock`, or `package-lock.json`, etc. and `CHANGELOG.md`).
+  4. The caller repository should label pull requests appropriately in order to determine the appropriate next version bump.
+  5. The caller repository should have a "maintenance" label for PRs, as that label is applied to the PR that this workflow creates.
+  6. The caller repository should contain a `.github_changelog_generator` configuration file with user, project, and exclude_labels parameters:
+  
+  ```
+  user=puppetlabs
+  project=$PROJECTNAME
+  exclude_labels=maintenance
+  ```
 
 #### Auto Release Prep Example
 
